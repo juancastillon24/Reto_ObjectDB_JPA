@@ -14,8 +14,8 @@ import org.example.retoobjectdb.repositories.CopyRespository;
 import org.example.retoobjectdb.repositories.FilmRepository;
 import org.example.retoobjectdb.services.UserService;
 import org.example.retoobjectdb.session.SimpleSessionService;
-import org.example.retoobjectdb.utils.DataProvider;
 import org.example.retoobjectdb.utils.JavaFXUtil;
+import org.example.retoobjectdb.utils.JPAUtil;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -37,8 +37,8 @@ public class MainController implements Initializable {
     private TableColumn<Copy, String> cId;
 
     SimpleSessionService simpleSessionService = new SimpleSessionService();
-    FilmRepository filmRepository = new FilmRepository(DataProvider.getSessionFactory());
-    CopyRespository copyRespository = new CopyRespository(DataProvider.getSessionFactory());
+    FilmRepository filmRepository = new FilmRepository(JPAUtil.getEntityManagerFactory());
+    CopyRespository copyRespository = new CopyRespository(JPAUtil.getEntityManagerFactory());
     UserService userService = new UserService();
 
     @FXML
@@ -78,13 +78,7 @@ public class MainController implements Initializable {
             return new SimpleStringProperty(String.valueOf(row.getValue().getEstado()));
         });
 
-        tabla.getSelectionModel().selectedItemProperty().addListener(showCopy());
-
-        simpleSessionService.getActive().getCopies().forEach(copy -> {
-            tabla.getItems().add(copy);
-        });
-
-        if (simpleSessionService.getActive().getIsAdmin() == true) {
+        if (simpleSessionService.getActive().getIsAdmin()) {
             panelAdmin.setVisible(true);
             panelUsuario.setVisible(false);
         } else {
@@ -93,11 +87,7 @@ public class MainController implements Initializable {
         }
 
         tabla.getSelectionModel().selectedItemProperty().addListener(showCopy());
-
-        simpleSessionService.getActive().getCopies().forEach(copy -> {
-            tabla.getItems().add(copy);
-        });
-
+        refreshTable();
 
     }
 
@@ -123,10 +113,7 @@ public class MainController implements Initializable {
         User user = userService.deleteCopyFromUser(simpleSessionService.getActive(), selectedCopy);
         simpleSessionService.update(user);
 
-        tabla.getItems().clear();
-        simpleSessionService.getActive().getCopies().forEach(game -> {
-            tabla.getItems().add(game);
-        });
+        refreshTable();
     }
 
 

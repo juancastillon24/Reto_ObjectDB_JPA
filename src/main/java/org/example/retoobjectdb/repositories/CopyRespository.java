@@ -1,46 +1,94 @@
 package org.example.retoobjectdb.repositories;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import org.example.retoobjectdb.models.Copy;
 import org.example.retoobjectdb.utils.Repository;
-import org.hibernate.SessionFactory;
 
 import java.util.List;
 import java.util.Optional;
 
-public class CopyRespository implements Repository<Copy> {
+public class CopyRespository implements Repository<Copy, Integer> {
 
-    private SessionFactory sessionFactory;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public CopyRespository(SessionFactory sessionFactory) {
-        this.sessionFactory  = sessionFactory;
+    public CopyRespository(EntityManagerFactory entityManagerFactory) {
+        this.entityManagerFactory = entityManagerFactory;
     }
     @Override
     public Copy save(Copy entity) {
-        return null;
+        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            em.persist(entity);
+            tx.commit();
+            return entity;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            return null;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public Optional<Copy> delete(Copy entity) {
-        return Optional.empty();
+        return deleteById(entity.getId());
     }
 
     @Override
-    public Optional<Copy> deleteById(Long id) {
-        return Optional.empty();
+    public Optional<Copy> deleteById(Integer id) {
+        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            Optional<Copy> copy = Optional.ofNullable(em.find(Copy.class, id));
+            copy.ifPresent(em::remove);
+            tx.commit();
+            return copy;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            return Optional.empty();
+        } finally {
+            em.close();
+        }
     }
 
     @Override
-    public Optional<Copy> findById(Long id) {
-        return Optional.empty();
+    public Optional<Copy> findById(Integer id) {
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            return Optional.ofNullable(em.find(Copy.class, id));
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public List<Copy> findAll() {
-        return List.of();
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            return em.createQuery("SELECT c FROM Copy c", Copy.class).getResultList();
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public Long count() {
-        return 0L;
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            return em.createQuery("SELECT COUNT(c) FROM Copy c", Long.class).getSingleResult();
+        } finally {
+            em.close();
+        }
     }
 }

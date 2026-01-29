@@ -1,37 +1,51 @@
 package org.example.retoobjectdb.services;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import org.example.retoobjectdb.models.Copy;
 import org.example.retoobjectdb.models.User;
-import org.example.retoobjectdb.utils.DataProvider;
-import org.hibernate.Session;
+import org.example.retoobjectdb.utils.JPAUtil;
 
 public class UserService {
+
+    private final EntityManagerFactory emf = JPAUtil.getEntityManagerFactory();
+
     public User deleteCopyFromUser(User user, Copy copy) {
-        try(Session s = DataProvider.getSessionFactory().openSession()) {
-            s.beginTransaction();
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
 
             // Recargar datos desde la BD
-            User currentUser = s.find(User.class, user.getId());
-            Copy copyToDelete = s.find(Copy.class, copy.getId());
+            User currentUser = em.find(User.class, user.getId());
+            Copy copyToDelete = em.find(Copy.class, copy.getId());
 
-            // Buscar y eliminar el juego de la colección y la bbdd
-            currentUser.getCopies().remove(copyToDelete);
-            currentUser.getCopies().removeIf(g -> g.getId().equals(copy.getId()));
-            s.remove(copyToDelete);
+            if (currentUser != null && copyToDelete != null) {
+                // Al eliminar la copia, JPA debería manejar la actualización de la colección del usuario.
+                // Para estar seguros, eliminamos explícitamente de la colección gestionada.
+                currentUser.getCopies().remove(copyToDelete);
+                em.remove(copyToDelete);
+            }
 
-            s.getTransaction().commit();
-
+            tx.commit();
             return currentUser;
+        } finally {
+            em.close();
         }
     }
 
     public User createNewCopy(Copy newCopy, User actualUser) {
-        try(Session s = DataProvider.getSessionFactory().openSession()) {
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
             actualUser.addCopy(newCopy);
-            s.beginTransaction();
-            s.merge(actualUser);
-            s.getTransaction().commit();
-            return s.find(User.class, actualUser.getId());
+            User mergedUser = em.merge(actualUser);
+            tx.commit();
+            return mergedUser;
+        } finally {
+            em.close();
         }
 
     }

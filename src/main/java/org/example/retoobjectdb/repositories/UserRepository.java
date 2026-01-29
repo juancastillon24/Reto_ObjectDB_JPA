@@ -1,58 +1,110 @@
 package org.example.retoobjectdb.repositories;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.NoResultException;
 import org.example.retoobjectdb.models.User;
 import org.example.retoobjectdb.utils.Repository;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.query.Query;
 
 import java.util.List;
 import java.util.Optional;
 
-public class UserRepository implements Repository<User> {
+public class UserRepository implements Repository<User, Integer> {
 
-    private SessionFactory sessionFactory;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public UserRepository(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
+    public UserRepository(EntityManagerFactory entityManagerFactory) {
+        this.entityManagerFactory = entityManagerFactory;
     }
 
     @Override
     public User save(User entity) {
-        return null;
+        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            em.persist(entity);
+            tx.commit();
+            return entity;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            return null;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public Optional<User> delete(User entity) {
-        return Optional.empty();
+        return deleteById(entity.getId());
     }
 
     @Override
-    public Optional<User> deleteById(Long id) {
-        return Optional.empty();
+    public Optional<User> deleteById(Integer id) {
+        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            Optional<User> user = Optional.ofNullable(em.find(User.class, id));
+            user.ifPresent(em::remove);
+            tx.commit();
+            return user;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            return Optional.empty();
+        } finally {
+            em.close();
+        }
     }
 
     @Override
-    public Optional<User> findById(Long id) {
-        return Optional.empty();
+    public Optional<User> findById(Integer id) {
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            return Optional.ofNullable(em.find(User.class, id));
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public List<User> findAll() {
-        return List.of();
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            return em.createQuery("SELECT u FROM User u", User.class).getResultList();
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public Long count() {
-        return 0L;
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            return em.createQuery("SELECT COUNT(u) FROM User u", Long.class).getSingleResult();
+        } finally {
+            em.close();
+        }
     }
 
     public Optional<User> findByUsername(String username) {
-        try(Session session = sessionFactory.openSession()) {
-            Query<User> q = session.createQuery(
-                    "from User where username=:username",User.class);
-            q.setParameter("username", username);
-            return Optional.ofNullable(q.uniqueResult());
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            User user = em.createQuery("SELECT u FROM User u WHERE u.username = :username", User.class)
+                    .setParameter("username", username)
+                    .getSingleResult();
+            return Optional.of(user);
+        } catch (NoResultException e) {
+            return Optional.empty();
+        } finally {
+            em.close();
         }
     }
 }

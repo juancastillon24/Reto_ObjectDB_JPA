@@ -1,7 +1,7 @@
 package org.example.retoobjectdb.models;
 
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,8 +28,6 @@ public class Film implements Serializable {
     private String description;
     private String director;
 
-    private List<Film> films = new ArrayList<>();
-
     @Override
     public String toString() {
         return "Film{" +
@@ -39,7 +37,6 @@ public class Film implements Serializable {
                 ", year=" + year +
                 ", description='" + description + '\'' +
                 ", director='" + director + '\'' +
-                ", films=" + films +
                 '}';
     }
 }

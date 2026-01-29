@@ -7,8 +7,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import org.example.retoobjectdb.models.Film;
 import org.example.retoobjectdb.repositories.FilmRepository;
-import org.example.retoobjectdb.utils.DataProvider;
 import org.example.retoobjectdb.utils.JavaFXUtil;
+import org.example.retoobjectdb.utils.JPAUtil;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -44,7 +44,7 @@ public class PeliculasController implements Initializable {
     @javafx.fxml.FXML
     private TableColumn<Film,String> cDirector;
 
-    private FilmRepository filmRepository = new FilmRepository(DataProvider.getSessionFactory());
+    private FilmRepository filmRepository = new FilmRepository(JPAUtil.getEntityManagerFactory());
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {

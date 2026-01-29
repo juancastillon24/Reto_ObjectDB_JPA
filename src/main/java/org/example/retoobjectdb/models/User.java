@@ -1,7 +1,7 @@
 package org.example.retoobjectdb.models;
 
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Data;
 
 import java.io.Serializable;

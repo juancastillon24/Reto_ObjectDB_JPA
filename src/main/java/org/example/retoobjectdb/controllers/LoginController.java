@@ -9,8 +9,8 @@ import org.example.retoobjectdb.models.User;
 import org.example.retoobjectdb.repositories.UserRepository;
 import org.example.retoobjectdb.session.AuthService;
 import org.example.retoobjectdb.session.SimpleSessionService;
-import org.example.retoobjectdb.utils.DataProvider;
 import org.example.retoobjectdb.utils.JavaFXUtil;
+import org.example.retoobjectdb.utils.JPAUtil;
 
 import java.net.URL;
 import java.util.Optional;
@@ -29,7 +29,7 @@ public class LoginController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        userRepository = new UserRepository(DataProvider.getSessionFactory());
+        userRepository = new UserRepository(JPAUtil.getEntityManagerFactory());
         authService = new AuthService(userRepository);
 
     }

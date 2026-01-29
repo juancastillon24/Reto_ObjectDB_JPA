@@ -2,10 +2,13 @@ module org.example.retoobjectdb {
     requires javafx.controls;
     requires javafx.fxml;
     requires static lombok;
-    requires jakarta.persistence;
-    requires org.hibernate.orm.core;
+    requires java.persistence;
     requires java.naming;
     requires javafx.base;
+    requires objectdb;
+
+    // AÑADE ESTA LÍNEA:
+    requires java.sql;
 
     opens org.example.retoobjectdb;
     exports org.example.retoobjectdb;
@@ -21,5 +24,4 @@ module org.example.retoobjectdb {
     exports org.example.retoobjectdb.session;
     exports org.example.retoobjectdb.services;
     opens org.example.retoobjectdb.services;
-
 }
