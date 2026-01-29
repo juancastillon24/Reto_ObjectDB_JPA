@@ -81,9 +81,11 @@ public class MainController implements Initializable {
         if (simpleSessionService.getActive().getIsAdmin()) {
             panelAdmin.setVisible(true);
             panelUsuario.setVisible(false);
+            tabla.setVisible(false);
         } else {
             panelAdmin.setVisible(false);
             panelUsuario.setVisible(true);
+            tabla.setVisible(true);
         }
 
         tabla.getSelectionModel().selectedItemProperty().addListener(showCopy());

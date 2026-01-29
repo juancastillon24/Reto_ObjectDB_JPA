@@ -1,60 +1,58 @@
-package org.example.retoobjectdb;
+package org.example.retoobjectdb.utils;
 
+import org.example.retoobjectdb.models.User;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import org.example.retoobjectdb.models.User;
-import org.example.retoobjectdb.models.Copy; // Asegúrate de importar tu entidad Copy
+import javax.persistence.TypedQuery;
 
 public class DataSeeder {
 
-    public static void main(String[] args) {
-        // 1. Configurar la conexión a ObjectDB
-        // Puedes usar el nombre de tu persistence-unit en persistence.xml o la ruta directa al archivo .odb
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("objectdb:db/biblioteca.odb");
+    public static void seedUsers(EntityManagerFactory emf) {
         EntityManager em = emf.createEntityManager();
 
         try {
             em.getTransaction().begin();
 
-            // --- Creación de Usuario Administrador ---
-            System.out.println("Creando administrador...");
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setPassword("admin"); // En producción, recuerda hashear la contraseña
-            admin.setIsAdmin(true);
+            // 1. Comprobamos si ya existen usuarios para no duplicar
+            Long count = em.createQuery("SELECT COUNT(u) FROM User u", Long.class).getSingleResult();
 
-            // --- Creación de Usuario Normal ---
-            System.out.println("Creando usuario estándar...");
-            User user = new User();
-            user.setUsername("juan");
-            user.setPassword("1234");
-            user.setIsAdmin(false);
+            if (count == 0) {
+                System.out.println("🌱 Base de datos de Usuarios vacía. Iniciando siembra de datos...");
 
-            // --- Ejemplo de relación con Copy (Opcional) ---
-            // Gracias a CascadeType.ALL en tu entidad User, si agregas copias,
-            // se guardarán automáticamente al guardar el User.
-            /* Copy copy1 = new Copy();
-            // configurar propiedades de copy1...
-            user.addCopy(copy1); // Usamos tu método helper addCopy
-            */
+                // --- Crear ADMIN ---
+                User admin = new User();
+                admin.setUsername("admin");
+                admin.setPassword("admin"); // Recuerda: en producción esto debería ir hasheado
+                admin.setIsAdmin(true);
+                em.persist(admin);
 
-            // 3. Persistir los objetos
-            // Si la base de datos ya tiene datos, podrías querer comprobar antes si existen
-            em.persist(admin);
-            em.persist(user);
+                // --- Crear Usuario Normal 1 ---
+                User user1 = new User();
+                user1.setUsername("juan");
+                user1.setPassword("1234");
+                user1.setIsAdmin(false);
+                em.persist(user1);
+
+                // --- Crear Usuario Normal 2 ---
+                User user2 = new User();
+                user2.setUsername("maria");
+                user2.setPassword("abcd");
+                user2.setIsAdmin(false);
+                em.persist(user2);
+
+                System.out.println("✅ Se han insertado 3 usuarios de prueba correctamente.");
+            } else {
+                System.out.println("ℹ️ Ya existen usuarios en la base de datos. Se omite el seed.");
+            }
 
             em.getTransaction().commit();
-            System.out.println("¡Datos sembrados correctamente!");
-
         } catch (Exception e) {
+            e.printStackTrace();
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            e.printStackTrace();
         } finally {
             em.close();
-            emf.close();
         }
     }
 }
